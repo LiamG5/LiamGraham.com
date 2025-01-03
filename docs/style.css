@@ -18,8 +18,14 @@ p {
   font-family: Georgia;
   text-align: center;
 }
+
 table, th, td {
     border: 1px solid white;
+    
+}
+td{
+  color: aliceblue;
+  font-family: Georgia;;
 }
 
 .center {

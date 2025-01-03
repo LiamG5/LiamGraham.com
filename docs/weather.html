@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link href="style.css" rel="stylesheet"  type = "text/css"/>
+</head>
+<body>
+    <h1>Weather App</h1>
+    <p>Fetching your weather...</p>
+    <div id="weather" class="weather-info"></div>
+
+    <script>
+        async function fetchWeatherByCoordinates(lat, lon) {
+            const weatherDiv = document.getElementById('weather');
+
+            try {
+                // Step 1: Get closest location ID
+                const locationResponse = await fetch(`https://www.metaweather.com/api/location/search/?lattlong=${lat},${lon}`);
+                const locationData = await locationResponse.json();
+
+                if (locationData.length === 0) {
+                    weatherDiv.innerHTML = '<p class="error">Unable to find weather for your location.</p>';
+                    return;
+                }
+
+                const locationId = locationData[0].woeid;
+
+                // Step 2: Get weather for the location ID
+                const weatherResponse = await fetch(`https://www.metaweather.com/api/location/${locationId}/`);
+                const weatherData = await weatherResponse.json();
+
+                const todayWeather = weatherData.consolidated_weather[0];
+
+                weatherDiv.innerHTML = `
+                    <h2>Weather in ${weatherData.title}</h2>
+                    <p><strong>Temperature:</strong> ${todayWeather.the_temp.toFixed(1)}°C</p>
+                    <p><strong>Weather:</strong> ${todayWeather.weather_state_name}</p>
+                    <p><strong>Humidity:</strong> ${todayWeather.humidity}%</p>
+                    <p><strong>Wind Speed:</strong> ${todayWeather.wind_speed.toFixed(1)} mph</p>
+                `;
+            } catch (error) {
+                console.error('Error fetching weather data:', error);
+                weatherDiv.innerHTML = '<p class="error">An error occurred while fetching weather data. Please refresh to try again.</p>';
+            }
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        fetchWeatherByCoordinates(lat, lon);
+                    },
+                    error => {
+                        console.error('Error fetching geolocation:', error);
+                        document.getElementById('weather').innerHTML = '<p class="error">Unable to get your location. Please check your browser settings.</p>';
+                    }
+                );
+            } else {
+                document.getElementById('weather').innerHTML = '<p class="error">Geolocation is not supported by your browser.</p>';
+            }
+        }
+
+        // Fetch weather on page load
+        getLocation();
+    </script>
+</body>
+</html>
